@@ -3,7 +3,6 @@ import { join } from "path";
 import { config } from "dotenv";
 import { DataSource } from "typeorm";
 
-import { TicketMessageAttachment } from "../src/modules/tickets/entities/ticket-message-attachment";
 config();
 
 const { DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER, NODE_ENV } = process.env;
@@ -18,7 +17,7 @@ export const connectionSource = new DataSource({
   password: DB_PASS,
   database: DB_NAME,
   logging: true,
-  entities: [join(process.cwd(), PATH, "modules/**/*.entity{.ts,.js}"), TicketMessageAttachment],
+  entities: [join(process.cwd(), PATH, "modules/**/*.entity{.ts,.js}")],
   migrations: [join(process.cwd(), "database/migrations/*{.ts,.js}")],
   synchronize: false,
   migrationsTableName: "typeorm_migrations",

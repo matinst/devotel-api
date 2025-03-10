@@ -7,7 +7,7 @@ import { JobService } from "./jobs.service";
 export class JobSchedulerService {
   constructor(private readonly jobService: JobService) {}
 
-  @Cron(CronExpression.EVERY_10_SECONDS) // This cron expression runs the job every hour
+  @Cron(CronExpression.EVERY_10_SECONDS)
   handleCron() {
     console.log("Running scheduled job fetch...");
     this.jobService.fetchAndStoreJobsRx("https://assignment.devotel.io/api/provider1/jobs", "provider1").subscribe();
@@ -16,6 +16,6 @@ export class JobSchedulerService {
 
   triggerJobManually() {
     console.log("Manually triggered job fetch...");
-    this.handleCron(); // Manually invoke the cron method
+    this.handleCron();
   }
 }

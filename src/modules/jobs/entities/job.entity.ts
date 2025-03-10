@@ -1,52 +1,35 @@
-import { Column, Entity, PrimaryColumn } from "typeorm";
+import { Column, Entity, Index, PrimaryGeneratedColumn, Unique } from "typeorm";
+
+import { CompanyType, LocationType, SalaryRangeType } from "../types/jobs.type";
 
 @Entity()
+@Unique(["jobId"])
 export class Job {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
+
+  @Index()
+  @Column()
   jobId: string;
 
-  @Column({ type: "varchar", length: 250 })
+  @Column()
   title: string;
 
-  @Column({ type: "text", nullable: true })
-  location: string;
+  @Column("jsonb")
+  location: LocationType;
 
-  @Column({ type: "varchar", length: 250, nullable: true })
-  city: string | undefined;
+  @Column()
+  employmentType: string;
 
-  @Column({ type: "varchar", length: 250, nullable: true })
-  state: string | undefined;
+  @Column("jsonb")
+  salaryRange: SalaryRangeType;
 
-  @Column({ type: "boolean", default: false })
-  remote: boolean;
-
-  @Column({ type: "varchar", length: 100 })
-  type: string;
-
-  @Column({ type: "int", nullable: true })
-  salaryMin: number;
-
-  @Column({ type: "int", nullable: true })
-  salaryMax: number;
-
-  @Column({ type: "varchar", length: 50, nullable: true })
-  currency: string;
-
-  @Column({ type: "varchar", length: 300 })
-  companyName: string;
-
-  @Column({ type: "varchar", length: 200, nullable: true })
-  industry: string | undefined;
-
-  @Column({ type: "varchar", length: 300, nullable: true })
-  website: string | undefined;
-
-  @Column({ type: "int", nullable: true })
-  experience: number | undefined;
+  @Column("jsonb")
+  company: CompanyType;
 
   @Column("text", { array: true })
   skills: string[];
 
-  @Column({ type: "timestamptz" })
-  postedDate: Date;
+  @Column()
+  postedDate: string;
 }

@@ -1,63 +1,77 @@
 import { Injectable } from "@nestjs/common";
 
-import { SalaryService } from "../../utils/providers/salary.service";
-import { ApiProvider, IJobDataV1, IJobDataV2 } from "../interfaces/IJob";
+import { UnifiedJobType } from "../types/jobs.type";
 
 @Injectable()
 export class JobTransformerService {
-  constructor(private readonly salaryService: SalaryService) {}
+  async transformJobData(job: any): Promise<UnifiedJobType> {
+    if (job.jobsList) {
+      const jobId = Object.keys(job.jobsList)[0];
+      const jobData = job.jobsList[jobId];
 
-  async transformJobData(job: IJobDataV1 | IJobDataV2, provider: ApiProvider) {
-    switch (provider) {
-      case "provider1":
-        return this.transformProviderV1Data(job as IJobDataV1);
-
-      case "provider2":
-        return this.transformProviderV2Data(job as IJobDataV2);
-      default:
-        throw new Error("Unsupported API source");
+      return {
+        jobId,
+        title: jobData.position,
+        location: {
+          city: jobData.location.city,
+          state: jobData.location.state,
+          remote: jobData.location.remote,
+        },
+        employmentType: "Full-Time",
+        salaryRange: {
+          min: jobData.compensation.min,
+          max: jobData.compensation.max,
+          currency: jobData.compensation.currency,
+        },
+        company: {
+          name: jobData.employer.companyName,
+          industry: "Unknown",
+          website: jobData.employer.website,
+        },
+        skills: jobData.requirements.technologies,
+        postedDate: jobData.datePosted,
+      };
     }
-  }
 
-  private async transformProviderV1Data(jobs: IJobDataV1) {
-    return {
-      jobId: jobs.jobId,
-      title: jobs.title,
-      location: jobs.details.location,
-      city: undefined,
-      state: undefined,
-      remote: false,
-      type: jobs.details.type,
-      salaryMin: (await this.salaryService.parseSalary(jobs.details.salaryRange)).min,
-      salaryMax: (await this.salaryService.parseSalary(jobs.details.salaryRange)).max,
-      currency: "USD",
-      companyName: jobs.company.name,
-      industry: jobs.company.industry,
-      website: undefined,
-      experience: undefined,
-      skills: jobs.skills,
-      postedDate: new Date(jobs.postedDate),
-    };
-  }
+    if (job.jobId) {
+      const jobData = job;
 
-  private async transformProviderV2Data(job: IJobDataV2) {
-    return {
-      jobId: job.id || `job-${job.position}`,
-      title: job.position,
-      location: `${job.location.city}, ${job.location.state}`,
-      city: job.location.city,
-      state: job.location.state,
-      remote: job.location.remote,
-      type: "Unknown",
-      salaryMin: job.compensation.min,
-      salaryMax: job.compensation.max,
-      currency: job.compensation.currency,
-      companyName: job.employer.companyName,
-      industry: undefined,
-      website: job.employer.website,
-      experience: job.requirements.experience,
-      skills: job.requirements.technologies,
-      postedDate: new Date(job.datePosted),
-    };
+      if (!jobData.details || !jobData.details.location || !jobData.details.salaryRange) {
+        console.error(`Missing critical fields in job data from provider2: ${JSON.stringify(jobData)}`);
+        throw new Error("Missing required fields in job data from provider2");
+      }
+
+      const [city, state] = jobData.details.location.split(", ").map((s: string) => s.trim());
+
+      const [minSalary, maxSalary] = jobData.details.salaryRange
+        .replace(/\$|k/g, "")
+        .split(" - ")
+        .map((value: string) => Number(value) * 1000);
+
+      return {
+        jobId: jobData.jobId,
+        title: jobData.title,
+        location: {
+          city,
+          state,
+          remote: false,
+        },
+        employmentType: jobData.details.type,
+        salaryRange: {
+          min: minSalary,
+          max: maxSalary,
+          currency: "USD",
+        },
+        company: {
+          name: jobData.company.name,
+          industry: jobData.company.industry,
+          website: "Unknown",
+        },
+        skills: jobData.skills,
+        postedDate: jobData.postedDate,
+      };
+    }
+
+    throw new Error("Unrecognized job format");
   }
 }
