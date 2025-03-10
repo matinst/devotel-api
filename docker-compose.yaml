@@ -1,0 +1,35 @@
+services:
+  pg_db:
+    image: postgres:alpine
+    env_file:
+      - .env
+    restart: always
+    container_name: postgres_db
+    ports:
+      - ${DB_PORT}:5432
+    # networks:
+    #   - app_network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   restart: always
+  #   container_name: pgadmin
+  #   ports:
+  #     - 5050:80
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+  #     PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+  #   depends_on:
+  #     - pg_db
+
+volumes:
+  postgres_data:
+# networks:
+#   app_network:
+#     driver: bridge
