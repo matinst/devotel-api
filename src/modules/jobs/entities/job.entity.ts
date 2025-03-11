@@ -22,7 +22,7 @@ export class Job {
   employmentType: string;
 
   @Column("jsonb")
-  salaryRange: SalaryRangeType;
+  salary: SalaryRangeType;
 
   @Column("jsonb")
   company: CompanyType;

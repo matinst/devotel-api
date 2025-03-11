@@ -21,7 +21,7 @@ export type UnifiedJobType = {
   title: string;
   location: LocationType;
   employmentType: string;
-  salaryRange: SalaryRangeType;
+  salary: SalaryRangeType;
   company: CompanyType;
   skills: string[];
   postedDate: string;

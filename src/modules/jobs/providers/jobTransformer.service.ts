@@ -32,7 +32,7 @@ export class JobTransformerService {
       title: job.title,
       location: { city, state, remote: false },
       employmentType: job.details.type || "Unknown",
-      salaryRange: { min: minSalary, max: maxSalary, currency: "USD" },
+      salary: { min: minSalary, max: maxSalary, currency: "USD" },
       company: {
         name: job.company.name,
         industry: job.company.industry || "Unknown",
@@ -61,7 +61,7 @@ export class JobTransformerService {
         remote: job.location.remote || false,
       },
       employmentType: job.details?.type || "Unknown",
-      salaryRange: {
+      salary: {
         min: job.compensation.min || 0,
         max: job.compensation.max || 0,
         currency: job.compensation.currency || "USD",

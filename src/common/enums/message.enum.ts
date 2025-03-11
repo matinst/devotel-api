@@ -9,3 +9,7 @@ export const enum CommonMessage {
   ID_SHOULD_BE_UUID = "شناسه باید یک یو یو آی دی باشد",
   PaymentTypeQueryNotEmpty = "نوع پرداخت نمی‌تواند خالی باشد",
 }
+
+export const enum JobMessage {
+  SEARCH_QUERY_STRING = "رشته جستجو معتبر نیست",
+}
