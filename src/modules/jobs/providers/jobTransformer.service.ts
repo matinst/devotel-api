@@ -1,77 +1,78 @@
 import { Injectable } from "@nestjs/common";
 
+import { Provider1Job, Provider2Job } from "../interfaces/IJob";
 import { UnifiedJobType } from "../types/jobs.type";
 
 @Injectable()
 export class JobTransformerService {
-  async transformJobData(job: any): Promise<UnifiedJobType> {
-    if (job.jobsList) {
-      const jobId = Object.keys(job.jobsList)[0];
-      const jobData = job.jobsList[jobId];
+  async transformJobData(job: Provider1Job | Provider2Job, provider: string): Promise<UnifiedJobType> {
+    switch (provider) {
+      case "provider1":
+        return this.transformProvider1Job(job as Provider1Job);
+      case "provider2":
+        return this.transformProvider2Job(job as Provider2Job);
+      default:
+        throw new Error(`Unsupported provider: ${provider}`);
+    }
+  }
 
-      return {
-        jobId,
-        title: jobData.position,
-        location: {
-          city: jobData.location.city,
-          state: jobData.location.state,
-          remote: jobData.location.remote,
-        },
-        employmentType: "Full-Time",
-        salaryRange: {
-          min: jobData.compensation.min,
-          max: jobData.compensation.max,
-          currency: jobData.compensation.currency,
-        },
-        company: {
-          name: jobData.employer.companyName,
-          industry: "Unknown",
-          website: jobData.employer.website,
-        },
-        skills: jobData.requirements.technologies,
-        postedDate: jobData.datePosted,
-      };
+  private async transformProvider1Job(job: Provider1Job): Promise<UnifiedJobType> {
+    if (!job.jobId || !job.details) {
+      throw new Error("Invalid job format for provider1");
     }
 
-    if (job.jobId) {
-      const jobData = job;
+    const [city, state] = job.details.location.split(", ").map((s: string) => s.trim());
+    const [minSalary, maxSalary] = job.details.salaryRange
+      .replace(/\$|k/g, "")
+      .split(" - ")
+      .map((value: string) => Number(value) * 1000);
 
-      if (!jobData.details || !jobData.details.location || !jobData.details.salaryRange) {
-        console.error(`Missing critical fields in job data from provider2: ${JSON.stringify(jobData)}`);
-        throw new Error("Missing required fields in job data from provider2");
-      }
+    return {
+      jobId: job.jobId,
+      title: job.title,
+      location: { city, state, remote: false },
+      employmentType: job.details.type || "Unknown",
+      salaryRange: { min: minSalary, max: maxSalary, currency: "USD" },
+      company: {
+        name: job.company.name,
+        industry: job.company.industry || "Unknown",
+        website: "Unknown",
+      },
+      skills: job.skills || [],
+      postedDate: job.postedDate,
+    };
+  }
 
-      const [city, state] = jobData.details.location.split(", ").map((s: string) => s.trim());
-
-      const [minSalary, maxSalary] = jobData.details.salaryRange
-        .replace(/\$|k/g, "")
-        .split(" - ")
-        .map((value: string) => Number(value) * 1000);
-
-      return {
-        jobId: jobData.jobId,
-        title: jobData.title,
-        location: {
-          city,
-          state,
-          remote: false,
-        },
-        employmentType: jobData.details.type,
-        salaryRange: {
-          min: minSalary,
-          max: maxSalary,
-          currency: "USD",
-        },
-        company: {
-          name: jobData.company.name,
-          industry: jobData.company.industry,
-          website: "Unknown",
-        },
-        skills: jobData.skills,
-        postedDate: jobData.postedDate,
-      };
+  private async transformProvider2Job(job: Provider2Job): Promise<UnifiedJobType> {
+    if (!job.jobId || !job.position || !job.location || !job.compensation || !job.employer) {
+      throw new Error(`Invalid job format for provider2: Missing required fields`);
     }
 
-    throw new Error("Unrecognized job format");
+    if (!job.location.city || !job.location.state) {
+      throw new Error(`Invalid job format for provider2: Missing location fields`);
+    }
+
+    return {
+      jobId: job.jobId,
+      title: job.position,
+      location: {
+        city: job.location.city,
+        state: job.location.state,
+        remote: job.location.remote || false,
+      },
+      employmentType: job.details?.type || "Unknown",
+      salaryRange: {
+        min: job.compensation.min || 0,
+        max: job.compensation.max || 0,
+        currency: job.compensation.currency || "USD",
+      },
+      company: {
+        name: job.employer.companyName || "Unknown",
+        industry: job.employer.industry || "Unknown",
+        website: job.employer.website || "Unknown",
+      },
+      skills: job.requirements?.technologies || [],
+      postedDate: job.datePosted,
+    };
   }
 }
