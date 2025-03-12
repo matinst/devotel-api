@@ -11,7 +11,7 @@ export class JobsController {
   //***************************** */
 
   @ApiOperation({ summary: "get all jobs" })
-  @Get()
+  @Get("job-offers")
   async getAllJobs(@Query() queryDto: JobsQueryDto) {
     return this.jobService.getAllJobs(queryDto);
   }
